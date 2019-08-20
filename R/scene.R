@@ -1,7 +1,8 @@
 #' @importFrom ggplot2 ggproto
-create_scene <- function(transition, view, shadow, ease, transmuters, nframes) {
+create_scene <- function(transition, view, shadow, ease, transmuters, nframes, frame_modifier = NULL) {
   if (is.null(nframes)) nframes <- 100
-  ggproto(NULL, Scene, transition = transition, view = view, shadow = shadow, ease = ease, transmuters = transmuters, nframes = nframes)
+  ggproto(NULL, Scene, transition = transition, view = view, shadow = shadow, ease = ease, transmuters = transmuters,
+          nframes = nframes, frame_modifier = NULL)
 }
 #' @importFrom ggplot2 ggproto ggplot_gtable
 #' @importFrom glue glue_data
@@ -118,9 +119,15 @@ Scene <- ggproto('Scene', NULL,
     })
     plot
   },
-  plot_frame = function(self, plot, i, newpage = is.null(vp), vp = NULL, widths = NULL, heights = NULL, ...) {
+  plot_frame = function(self, plot, i, newpage = is.null(vp), vp = NULL, widths = NULL, heights = NULL, frame_modifier, ...) {
     plot <- self$get_frame(plot, i)
+
     plot <- ggplot_gtable(plot)
+
+    if(!is.null(frame_modifier)) {
+      plot <- frame_modifier(plot)
+    }
+
     if (!is.null(widths)) plot$widths <- widths
     if (!is.null(heights)) plot$heights <- heights
     if (newpage) grid.newpage()

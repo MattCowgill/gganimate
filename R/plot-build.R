@@ -1,12 +1,12 @@
 #' @importFrom ggplot2 ggplot_build geom_blank waiver
 #' @importFrom utils packageVersion
 #' @export
-ggplot_build.gganim <- function(plot) {
+ggplot_build.gganim <- function(plot, frame_modifier) {
   plot <- plot_clone(plot)
   if (length(plot$layers) == 0) {
     plot <- plot + geom_blank()
   }
-  scene <- create_scene(plot$transition, plot$view, plot$shadow, plot$ease, plot$transmuters, plot$nframes)
+  scene <- create_scene(plot$transition, plot$view, plot$shadow, plot$ease, plot$transmuters, plot$nframes, frame_modifier)
   layers <- plot$layers
   layer_data <- lapply(layers, function(y) y$layer_data(plot$data))
 

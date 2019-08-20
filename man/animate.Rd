@@ -10,7 +10,8 @@
 animate(plot, ...)
 
 \method{animate}{gganim}(plot, nframes, fps, duration, detail, renderer,
-  device, ref_frame, start_pause, end_pause, rewind, ...)
+  device, ref_frame, start_pause, end_pause, rewind,
+  frame_modifier = NULL, ...)
 
 \method{print}{gganim}(x, ...)
 
@@ -44,6 +45,9 @@ counts backwards (-1 is the last frame) (default \code{1})}
 frame in the animation (default is \code{0} for both)}
 
 \item{rewind}{Should the animation roll back in the end (default \code{FALSE})}
+
+\item{frame_modifier}{A function that takes a plot as a gtable object and returns
+a plot as a gtable object. The function will be applied to each frame of the animation. (default \code{NULL})}
 
 \item{options}{chunk options for the currently executing chunk}
 }
@@ -120,6 +124,7 @@ Consult the documentation for these for more detail.
 
 \examples{
 anim <- ggplot(mtcars, aes(mpg, disp)) +
+  geom_point() +
   transition_states(gear, transition_length = 2, state_length = 1) +
   enter_fade() +
   exit_fade()

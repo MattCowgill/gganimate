@@ -54,6 +54,7 @@ Collate:
     'animate.R'
     'animation_store.R'
     'ease-aes.R'
+    'frame_modifiers.R'
     'gganim.R'
     'gganimate-ggproto.R'
     'gganimate-package.r'

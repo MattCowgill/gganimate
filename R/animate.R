@@ -28,6 +28,8 @@
 #' @param start_pause,end_pause Number of times to repeat the first and last
 #' frame in the animation (default is `0` for both)
 #' @param rewind Should the animation roll back in the end (default `FALSE`)
+#' @param frame_modifier A function that takes a plot as a gtable object and returns
+#' a plot as a gtable object. The function will be applied to each frame of the animation. (default `NULL`)
 #' @param ... Arguments passed on to the device
 #'
 #' @return The return value of the [renderer][renderers] function
@@ -88,6 +90,7 @@
 #'
 #' @examples
 #' anim <- ggplot(mtcars, aes(mpg, disp)) +
+#'   geom_point() +
 #'   transition_states(gear, transition_length = 2, state_length = 1) +
 #'   enter_fade() +
 #'   exit_fade()
@@ -115,7 +118,7 @@ animate.default <- function(plot, ...) {
 }
 #' @rdname animate
 #' @export
-animate.gganim <- function(plot, nframes, fps, duration, detail, renderer, device, ref_frame, start_pause, end_pause, rewind, ...) {
+animate.gganim <- function(plot, nframes, fps, duration, detail, renderer, device, ref_frame, start_pause, end_pause, rewind, frame_modifier = NULL, ...) {
   args <- prepare_args(
     nframes = nframes,
     fps = fps,
@@ -127,6 +130,7 @@ animate.gganim <- function(plot, nframes, fps, duration, detail, renderer, devic
     start_pause = start_pause,
     end_pause = end_pause,
     rewind = rewind,
+    frame_modifier = frame_modifier,
     ...
   )
   orig_nframes <- args$nframes
@@ -163,7 +167,8 @@ animate.gganim <- function(plot, nframes, fps, duration, detail, renderer, devic
     c(list(plot = plot,
            frames = frame_ind,
            device = args$device,
-           ref_frame = args$ref_frame),
+           ref_frame = args$ref_frame,
+           frame_modifier = frame_modifier),
       args$dev_args)
   )
   if (args$device == 'current') return(invisible(frames_vars))
@@ -195,7 +200,7 @@ gganimate <- function(...) {
 gg_animate <- gganimate
 
 #' @importFrom utils modifyList
-prepare_args <- function(nframes, fps, duration, detail, renderer, device, ref_frame, start_pause, end_pause, rewind, ...) {
+prepare_args <- function(nframes, fps, duration, detail, renderer, device, ref_frame, start_pause, end_pause, rewind, frame_modifier, ...) {
   args <- list()
   chunk_args <- if (is_knitting()) get_knitr_options(knitr::opts_chunk$get(), unlist = FALSE) else list(dev_args = list())
   args$nframes <- nframes %?% chunk_args$nframes %||% getOption('gganimate.nframes', 100)
@@ -238,7 +243,7 @@ prerender <- function(plot, nframes) {
 # Draw each frame as an image based on a specified device
 # Returns a data.frame of frame metadata with image location in frame_source
 # column
-draw_frames <- function(plot, frames, device, ref_frame, ...) {
+draw_frames <- function(plot, frames, device, ref_frame, frame_modifier = frame_modifier, ...) {
   stream <- device == 'current'
 
   dims <- tryCatch(
@@ -288,7 +293,7 @@ draw_frames <- function(plot, frames, device, ref_frame, ...) {
     if (!stream) device(files[i], ...)
 
     tryCatch(
-      plot$scene$plot_frame(plot, frames[i], widths = dims$widths, heights = dims$heights),
+      plot$scene$plot_frame(plot, frames[i], widths = dims$widths, heights = dims$heights, frame_modifier = frame_modifier),
       error = function(e) {
         warning(conditionMessage(e), call. = FALSE)
       }
